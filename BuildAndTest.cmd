@@ -52,6 +52,7 @@ dotnet test %~dp0src\BinSkim.sln /p:Configuration=%Configuration% --no-build
 :: Create the BinSkim publish packages
 echo Creating Platform 'Publish' Packages...
 call :CreatePublishPackage netcoreapp3.1 || goto :ExitFailed
+call :CreatePublishPackage net5.0 || goto :ExitFailed
 
 :: Build NuGet package
 echo BuildPackages.cmd

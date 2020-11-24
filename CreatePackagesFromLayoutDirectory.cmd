@@ -40,9 +40,17 @@ xcopy /Y %LayoutForSigningDirectory%\netcoreapp3.1\%~n1.exe %BinaryOutputDirecto
 if "%ERRORLEVEL%" NEQ "0" (echo %1 assembly copy failed. && goto :ExeFilesExit)
 :ExeFilesExit
 Exit /B %ERRORLEVEL%
+xcopy /Y %LayoutForSigningDirectory%\net5.0\%~n1.exe %BinaryOutputDirectory%\net5.0\ 
+if "%ERRORLEVEL%" NEQ "0" (echo %1 assembly copy failed. && goto :ExeFilesExit)
+:ExeFilesExit
+Exit /B %ERRORLEVEL%
 
 :CopyFilesForMultitargeting
 xcopy /Y %LayoutForSigningDirectory%\netcoreapp3.1\%~n1.dll %BinaryOutputDirectory%\netcoreapp3.1\ 
+if "%ERRORLEVEL%" NEQ "0" (echo %1 assembly copy failed. && goto :CopyFilesExit)
+:CopyFilesExit
+Exit /B %ERRORLEVEL%
+xcopy /Y %LayoutForSigningDirectory%\net5.0\%~n1.dll %BinaryOutputDirectory%\net5.0\ 
 if "%ERRORLEVEL%" NEQ "0" (echo %1 assembly copy failed. && goto :CopyFilesExit)
 :CopyFilesExit
 Exit /B %ERRORLEVEL%

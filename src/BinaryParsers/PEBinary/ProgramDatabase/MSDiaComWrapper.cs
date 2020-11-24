@@ -15,7 +15,7 @@ namespace Microsoft.CodeAnalysis.BinaryParsers.ProgramDatabase
         int CreateInstance(IntPtr pUnkOuter, ref Guid riid, out IntPtr ppvObject);
     }
 
-    internal class MsdiaComWrapper
+    internal static class MsdiaComWrapper
     {
         [DllImport("msdia140.dll", CharSet = System.Runtime.InteropServices.CharSet.Ansi, ExactSpelling = true, BestFitMapping = false)]
         private static extern int DllGetClassObject(
@@ -25,8 +25,8 @@ namespace Microsoft.CodeAnalysis.BinaryParsers.ProgramDatabase
 
         private static void CoCreateFromMsdia(Guid clsidOfServer, Guid riid, out IntPtr pvObject)
         {
-            IntPtr pClassFactory = IntPtr.Zero;
-            int hr = DllGetClassObject(clsidOfServer, new Guid("00000001-0000-0000-C000-000000000046"), out pClassFactory);
+            IntPtr pClassFactory;
+            _ = DllGetClassObject(clsidOfServer, new Guid("00000001-0000-0000-C000-000000000046"), out pClassFactory);
             var classFactory = (IClassFactory)Marshal.GetObjectForIUnknown(pClassFactory);
             classFactory.CreateInstance(IntPtr.Zero, ref riid, out pvObject);
             Marshal.Release(pClassFactory);
@@ -41,8 +41,7 @@ namespace Microsoft.CodeAnalysis.BinaryParsers.ProgramDatabase
             IntPtr diaSourcePtr = IntPtr.Zero;
             CoCreateFromMsdia(new Guid(DiaSourceClsid), new Guid(IDiaDataSourceRiid), out diaSourcePtr);
             object objectForIUnknown = Marshal.GetObjectForIUnknown(diaSourcePtr);
-            var diaSourceInstance = objectForIUnknown as IDiaDataSource;
-            return diaSourceInstance;
+            return objectForIUnknown as IDiaDataSource;
         }
     }
 }
