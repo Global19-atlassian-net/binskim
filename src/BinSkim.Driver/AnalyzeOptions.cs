@@ -10,7 +10,7 @@ using Microsoft.CodeAnalysis.Sarif.Driver;
 namespace Microsoft.CodeAnalysis.IL
 {
     [Verb("analyze", HelpText = "Analyze one or more binary files for security and correctness issues.")]
-    internal class AnalyzeOptions : AnalyzeOptionsBase
+    public class AnalyzeOptions : AnalyzeOptionsBase
     {
         [Option(
             "trace",
@@ -19,7 +19,7 @@ namespace Microsoft.CodeAnalysis.IL
             HelpText = "Execution traces, expressed as a semicolon-delimited list, that " +
                        "should be emitted to the console and log file (if appropriate). " +
                        "Valid values: PdbLoad.")]
-        public IEnumerable<Traces> Traces { get; internal set; }
+        public override IEnumerable<string> Traces { get; set; }
 
         [Option(
             "sympath",

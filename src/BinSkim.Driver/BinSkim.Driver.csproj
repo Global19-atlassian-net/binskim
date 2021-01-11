@@ -23,17 +23,15 @@
     <Content Include="README.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <EmbeddedResource Include=".\DotnetToolSettings.xml" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.7.82" />
-    <PackageReference Include="Microsoft.CodeAnalysis" Version="2.6.1" />
-    <PackageReference Include="Microsoft.DiaSymReader" Version="1.2.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
-    <PackageReference Include="Sarif.Driver" Version="2.3.8" />
+    <PackageReference Include="Microsoft.CodeAnalysis" Version="3.8.0" />
+    <PackageReference Include="Microsoft.DiaSymReader" Version="1.3.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="System.Collections.Immutable" Version="5.0.0" />
-    <PackageReference Include="System.Reflection.Metadata" Version="1.5.0" />
+    <PackageReference Include="System.Reflection.Metadata" Version="5.0.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -44,6 +42,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\sarif-sdk\src\Sarif.Driver\Sarif.Driver.csproj" />
     <ProjectReference Include="..\BinaryParsers\BinaryParsers.csproj" />
     <ProjectReference Include="..\BinSkim.Rules\BinSkim.Rules.csproj" />
     <ProjectReference Include="..\BinSkim.Sdk\BinSkim.Sdk.csproj" />

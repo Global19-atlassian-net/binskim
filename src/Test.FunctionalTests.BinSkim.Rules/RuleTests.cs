@@ -227,9 +227,9 @@ namespace Microsoft.CodeAnalysis.IL.Rules
             }
         }
 
-        private void VerifyNotApplicable(
+        private void VerifyApplicability(
             BinarySkimmer skimmer,
-            HashSet<string> notApplicableConditions,
+            HashSet<string> applicabilityConditions,
             AnalysisApplicability expectedApplicability = AnalysisApplicability.NotApplicableToSpecifiedTarget,
             bool useDefaultPolicy = false)
         {
@@ -240,7 +240,7 @@ namespace Microsoft.CodeAnalysis.IL.Rules
 
             var context = new BinaryAnalyzerContext();
 
-            HashSet<string> targets = this.GetTestFilesMatchingConditions(notApplicableConditions);
+            HashSet<string> targets = this.GetTestFilesMatchingConditions(applicabilityConditions);
 
             if (Directory.Exists(testFilesDirectory))
             {
@@ -276,7 +276,7 @@ namespace Microsoft.CodeAnalysis.IL.Rules
                 applicability = skimmer.CanAnalyze(context, out string reasonForNotAnalyzing);
                 if (applicability != expectedApplicability)
                 {
-                    sb.AppendLine("CanAnalyze did not indicate target was invalid for analysis (return was " +
+                    sb.AppendLine("CanAnalyze did not correct indicate target applicability (unexpected return was " +
                         applicability + "): " +
                         Path.GetFileName(target));
                     continue;
@@ -433,7 +433,7 @@ namespace Microsoft.CodeAnalysis.IL.Rules
                 MetadataConditions.ImageIsILOnlyAssembly
             };
 
-            this.VerifyNotApplicable(new LoadImageAboveFourGigabyteAddress(), notApplicableTo);
+            this.VerifyApplicability(new LoadImageAboveFourGigabyteAddress(), notApplicableTo);
         }
 
         [Fact]
@@ -475,12 +475,38 @@ namespace Microsoft.CodeAnalysis.IL.Rules
                 MetadataConditions.ImageIsILOnlyAssembly
             };
 
-            this.VerifyNotApplicable(new DoNotIncorporateVulnerableDependencies(), notApplicableTo);
+            this.VerifyApplicability(new DoNotIncorporateVulnerableDependencies(), notApplicableTo);
 
             if (BinaryParsers.PlatformSpecificHelpers.RunningOnWindows())
             {
                 var applicableTo = new HashSet<string> { MetadataConditions.ImageIs64BitBinary };
-                this.VerifyNotApplicable(new DoNotIncorporateVulnerableDependencies(), applicableTo, AnalysisApplicability.ApplicableToSpecifiedTarget);
+                this.VerifyApplicability(new DoNotIncorporateVulnerableDependencies(), applicableTo, AnalysisApplicability.ApplicableToSpecifiedTarget);
+            }
+            else
+            {
+                this.VerifyThrows<PlatformNotSupportedException>(new DoNotDisableStackProtectionForFunctions(), useDefaultPolicy: true);
+            }
+        }
+
+        [Fact]
+        public void BA2004_EnableSecureSourceCodeHashing_Pass()
+        {
+            if (BinaryParsers.PlatformSpecificHelpers.RunningOnWindows())
+            {
+                this.VerifyPass(new EnableSecureSourceCodeHashing(), useDefaultPolicy: true);
+            }
+            else
+            {
+                this.VerifyThrows<PlatformNotSupportedException>(new EnableSecureSourceCodeHashing(), useDefaultPolicy: true);
+            }
+        }
+
+        [Fact]
+        public void BA2004_EnableSecureSourceCodeHashing_Fail()
+        {
+            if (BinaryParsers.PlatformSpecificHelpers.RunningOnWindows())
+            {
+                this.VerifyFail(new EnableSecureSourceCodeHashing(), useDefaultPolicy: true);
             }
             else
             {
@@ -531,7 +557,7 @@ namespace Microsoft.CodeAnalysis.IL.Rules
                 MetadataConditions.ImageIsResourceOnlyAssembly
             };
 
-            this.VerifyNotApplicable(new DoNotShipVulnerableBinaries(), notApplicableTo, AnalysisApplicability.ApplicableToSpecifiedTarget);
+            this.VerifyApplicability(new DoNotShipVulnerableBinaries(), notApplicableTo, AnalysisApplicability.ApplicableToSpecifiedTarget);
         }
 
         [Fact]
@@ -574,7 +600,7 @@ namespace Microsoft.CodeAnalysis.IL.Rules
                 MetadataConditions.ImageIsILOnlyAssembly
             };
 
-            this.VerifyNotApplicable(new BuildWithSecureTools(), notApplicableTo);
+            this.VerifyApplicability(new BuildWithSecureTools(), notApplicableTo);
         }
 
         [Fact]
@@ -623,14 +649,14 @@ namespace Microsoft.CodeAnalysis.IL.Rules
                     MetadataConditions.ImageIsILOnlyAssembly
                 };
 
-                this.VerifyNotApplicable(new EnableCriticalCompilerWarnings(), notApplicableTo);
+                this.VerifyApplicability(new EnableCriticalCompilerWarnings(), notApplicableTo);
 
                 var applicableTo = new HashSet<string>
                 {
                     MetadataConditions.ImageIs64BitBinary
                 };
 
-                this.VerifyNotApplicable(
+                this.VerifyApplicability(
                     new EnableCriticalCompilerWarnings(),
                     applicableTo,
                     AnalysisApplicability.ApplicableToSpecifiedTarget);
@@ -668,7 +694,7 @@ namespace Microsoft.CodeAnalysis.IL.Rules
                 MetadataConditions.ImageIsWixBinary,
             };
 
-            this.VerifyNotApplicable(new EnableControlFlowGuard(), notApplicableTo, useDefaultPolicy: true);
+            this.VerifyApplicability(new EnableControlFlowGuard(), notApplicableTo, useDefaultPolicy: true);
         }
 
         [Fact]
@@ -693,7 +719,7 @@ namespace Microsoft.CodeAnalysis.IL.Rules
                 MetadataConditions.ImageIsPreVersion7WindowsCEBinary,
             };
 
-            this.VerifyNotApplicable(new EnableAddressSpaceLayoutRandomization(), notApplicableTo);
+            this.VerifyApplicability(new EnableAddressSpaceLayoutRandomization(), notApplicableTo);
         }
 
         [Fact]
@@ -717,7 +743,7 @@ namespace Microsoft.CodeAnalysis.IL.Rules
                 MetadataConditions.ImageIsILOnlyAssembly
             };
 
-            this.VerifyNotApplicable(new DoNotMarkImportsSectionAsExecutable(), notApplicableTo);
+            this.VerifyApplicability(new DoNotMarkImportsSectionAsExecutable(), notApplicableTo);
         }
 
         [Fact]
@@ -751,7 +777,7 @@ namespace Microsoft.CodeAnalysis.IL.Rules
         {
             HashSet<string> notApplicableTo = GetNotApplicableBinariesForStackProtectionFeature();
 
-            this.VerifyNotApplicable(new EnableStackProtection(), notApplicableTo);
+            this.VerifyApplicability(new EnableStackProtection(), notApplicableTo);
         }
 
         [Fact]
@@ -776,7 +802,7 @@ namespace Microsoft.CodeAnalysis.IL.Rules
             // data that indicates that stack protection is relevant to the file.
             notApplicableTo.Remove(MetadataConditions.ImageIsWixBinary);
 
-            this.VerifyNotApplicable(new DoNotModifyStackProtectionCookie(), notApplicableTo);
+            this.VerifyApplicability(new DoNotModifyStackProtectionCookie(), notApplicableTo);
         }
 
         private static HashSet<string> GetNotApplicableBinariesForStackProtectionFeature()
@@ -828,7 +854,7 @@ namespace Microsoft.CodeAnalysis.IL.Rules
         {
             HashSet<string> notApplicableTo = GetNotApplicableBinariesForStackProtectionFeature();
 
-            this.VerifyNotApplicable(new InitializeStackProtection(), notApplicableTo);
+            this.VerifyApplicability(new InitializeStackProtection(), notApplicableTo);
         }
 
         [Fact]
@@ -876,7 +902,7 @@ namespace Microsoft.CodeAnalysis.IL.Rules
                 MetadataConditions.ImageIsILOnlyAssembly
             };
 
-            this.VerifyNotApplicable(new DoNotDisableStackProtectionForFunctions(), notApplicableTo);
+            this.VerifyApplicability(new DoNotDisableStackProtectionForFunctions(), notApplicableTo);
 
             if (BinaryParsers.PlatformSpecificHelpers.RunningOnWindows())
             {
@@ -884,7 +910,7 @@ namespace Microsoft.CodeAnalysis.IL.Rules
                 {
                     MetadataConditions.ImageIs64BitBinary
                 };
-                this.VerifyNotApplicable(new DoNotDisableStackProtectionForFunctions(), applicableTo, AnalysisApplicability.ApplicableToSpecifiedTarget);
+                this.VerifyApplicability(new DoNotDisableStackProtectionForFunctions(), applicableTo, AnalysisApplicability.ApplicableToSpecifiedTarget);
             }
 
             else
@@ -915,7 +941,7 @@ namespace Microsoft.CodeAnalysis.IL.Rules
                 MetadataConditions.ImageIsKernelModeBinary
             };
 
-            this.VerifyNotApplicable(new EnableHighEntropyVirtualAddresses(), notApplicableTo);
+            this.VerifyApplicability(new EnableHighEntropyVirtualAddresses(), notApplicableTo);
         }
 
         [Fact]
@@ -942,7 +968,7 @@ namespace Microsoft.CodeAnalysis.IL.Rules
                 MetadataConditions.ImageIsPreVersion7WindowsCEBinary
             };
 
-            this.VerifyNotApplicable(new MarkImageAsNXCompatible(), notApplicableTo);
+            this.VerifyApplicability(new MarkImageAsNXCompatible(), notApplicableTo);
         }
 
         [Fact]
@@ -967,7 +993,7 @@ namespace Microsoft.CodeAnalysis.IL.Rules
                 MetadataConditions.ImageIsResourceOnlyBinary
             };
 
-            this.VerifyNotApplicable(new EnableSafeSEH(), notApplicableTo);
+            this.VerifyApplicability(new EnableSafeSEH(), notApplicableTo);
         }
 
         [Fact]
@@ -990,7 +1016,7 @@ namespace Microsoft.CodeAnalysis.IL.Rules
                 MetadataConditions.ImageIsXBoxBinary
             };
 
-            this.VerifyNotApplicable(new DoNotMarkWritableSectionsAsShared(), notApplicableTo);
+            this.VerifyApplicability(new DoNotMarkWritableSectionsAsShared(), notApplicableTo);
         }
 
         [Fact]
@@ -1013,7 +1039,7 @@ namespace Microsoft.CodeAnalysis.IL.Rules
                 MetadataConditions.ImageIsKernelModeBinary
             };
 
-            this.VerifyNotApplicable(new DoNotMarkWritableSectionsAsExecutable(), notApplicableTo);
+            this.VerifyApplicability(new DoNotMarkWritableSectionsAsExecutable(), notApplicableTo);
         }
 
         [Fact]
@@ -1045,7 +1071,7 @@ namespace Microsoft.CodeAnalysis.IL.Rules
         public void BA2022_SignSecurely_NotApplicable()
         {
             var applicableTo = new HashSet<string> { MetadataConditions.ImageIsNotSigned };
-            this.VerifyNotApplicable(new DoNotIncorporateVulnerableDependencies(), applicableTo, AnalysisApplicability.NotApplicableToSpecifiedTarget);
+            this.VerifyApplicability(new DoNotIncorporateVulnerableDependencies(), applicableTo, AnalysisApplicability.NotApplicableToSpecifiedTarget);
         }
 
         [Fact]
@@ -1081,7 +1107,7 @@ namespace Microsoft.CodeAnalysis.IL.Rules
         [Fact]
         public void BA3001_EnablePositionIndependentExecutable_NotApplicable()
         {
-            this.VerifyNotApplicable(new EnablePositionIndependentExecutable(), new HashSet<string>());
+            this.VerifyApplicability(new EnablePositionIndependentExecutable(), new HashSet<string>());
         }
 
         [Fact]
@@ -1099,7 +1125,7 @@ namespace Microsoft.CodeAnalysis.IL.Rules
         [Fact]
         public void BA3002_DoNotMarkStackAsExecutable_NotApplicable()
         {
-            this.VerifyNotApplicable(new EnablePositionIndependentExecutable(), new HashSet<string>());
+            this.VerifyApplicability(new EnablePositionIndependentExecutable(), new HashSet<string>());
         }
 
         [Fact]
@@ -1117,7 +1143,7 @@ namespace Microsoft.CodeAnalysis.IL.Rules
         [Fact]
         public void BA3003_EnableStackProtector_NotApplicable()
         {
-            this.VerifyNotApplicable(new EnablePositionIndependentExecutable(), new HashSet<string>());
+            this.VerifyApplicability(new EnablePositionIndependentExecutable(), new HashSet<string>());
         }
 
         [Fact]
@@ -1135,7 +1161,7 @@ namespace Microsoft.CodeAnalysis.IL.Rules
         [Fact]
         public void BA3010_EnableReadOnlyRelocations_NotApplicable()
         {
-            this.VerifyNotApplicable(new EnablePositionIndependentExecutable(), new HashSet<string>());
+            this.VerifyApplicability(new EnablePositionIndependentExecutable(), new HashSet<string>());
         }
 
         [Fact]
@@ -1153,7 +1179,7 @@ namespace Microsoft.CodeAnalysis.IL.Rules
         [Fact]
         public void BA3030_UseCheckedFunctionsWithGCC_NotApplicable()
         {
-            this.VerifyNotApplicable(new UseCheckedFunctionsWithGcc(), new HashSet<string>());
+            this.VerifyApplicability(new UseCheckedFunctionsWithGcc(), new HashSet<string>());
         }
     }
 }
